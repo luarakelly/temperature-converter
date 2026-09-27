@@ -5,7 +5,8 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git 'https://github.com/luarakelly/temperature-converter'
+                git branch: 'main',
+                url: 'https://github.com/luarakelly/temperature-converter'
             }
         }
 
