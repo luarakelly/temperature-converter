@@ -6,7 +6,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                url: 'https://github.com/luarakelly/temperature-converter'
+                    url: 'https://github.com/luarakelly/temperature-converter'
             }
         }
 
@@ -39,5 +39,24 @@ pipeline {
                 jacoco()
             }
         }
+
+        stage('Docker Build') {
+            steps {
+                bat 'docker build -t luaram/temperature-converter:latest .'
+            }
+        }
+
+        stage('Docker Run') {
+            steps {
+                bat 'docker run --rm luaram/temperature-converter:latest'
+            }
+        }
+
+        stage('Docker Push') {
+            steps {
+                bat 'docker push luaram/temperature-converter:latest'
+            }
+        }
     }
 }
+
