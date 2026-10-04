@@ -1,5 +1,16 @@
 pipeline {
+
     agent any
+
+    tools {
+        maven 'Maven3'
+    }
+
+    environment {
+        DOCKERHUB_CREDENTIALS_ID = 'Docker_Hub'
+        DOCKERHUB_REPO = 'luaram/temperature-converter'
+        DOCKER_IMAGE_TAG = 'latest'
+    }
 
     stages {
 
@@ -10,15 +21,9 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Build and Test') {
             steps {
                 bat 'mvn clean install'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                bat 'mvn test'
             }
         }
 
@@ -40,33 +45,29 @@ pipeline {
             }
         }
 
-        stage('Docker Build') {
+        stage('Build Docker Image') {
             steps {
-                bat 'docker build -t luaram/temperature-converter:latest .'
+                script {
+                    docker.build(
+                        "${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}"
+                    )
+                }
             }
         }
 
-        stage('Docker Run') {
+        stage('Push Docker Image to Docker Hub') {
             steps {
-                bat 'docker run --rm luaram/temperature-converter:latest'
+                script {
+                    docker.withRegistry(
+                        'https://index.docker.io/v1/',
+                        DOCKERHUB_CREDENTIALS_ID
+                    ) {
+                        docker.image(
+                            "${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}"
+                        ).push()
+                    }
+                }
             }
         }
-
-        stage('Docker Push') {
-    steps {
-        withCredentials([
-            usernamePassword(
-                credentialsId: 'dockerhub-credentials',
-                usernameVariable: 'DOCKER_USERNAME',
-                passwordVariable: 'DOCKER_PASSWORD'
-            )
-        ]) {
-            bat 'echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin'
-            bat 'docker push luaram/temperature-converter:latest'
-        }
     }
 }
-
-    }
-}
-
