@@ -17,3 +17,13 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Environment variables
+.env
+.env.docker
+.env.local
+
+# command line instructions
+.txt
+
+
