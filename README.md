@@ -1,5 +1,6 @@
-Temperature Converter
-1. Assignment Description
+# Temperature Converter
+
+## 1. Assignment Description
 
 This individual in-class assignment was completed independently to practise software development tools and technologies used in a software project.
 
@@ -7,163 +8,157 @@ The project is a JavaFX desktop application for converting temperatures between 
 
 The assignment demonstrates the use of:
 
-Java and JavaFX for application development
-Maven for project and dependency management
-JUnit for automated testing
-JaCoCo for code coverage
-Jenkins for continuous integration
-Docker for containerisation
-MariaDB for persistent data storage
-Git and GitHub for version control
-Main Requirements
+- Java and JavaFX for application development
+- Maven for project and dependency management
+- JUnit for automated testing
+- JaCoCo for code coverage
+- Jenkins for continuous integration
+- Docker for containerisation
+- MariaDB for persistent data storage
 
 The main requirements addressed in the assignment were:
 
-Implement a functional JavaFX desktop application.
-Implement temperature conversion functionality.
-Validate user input.
-Save conversion results to a database.
-Display saved conversion records.
-Create automated tests.
-Generate a JaCoCo code coverage report.
-Create a Jenkins pipeline for automated build and testing.
-Build and publish the application as a Docker image.
-2. Technologies & Tools Used
-Area	Technology
-Programming language	Java 21
-GUI	JavaFX 21
-Build tool	Maven
-Database	MariaDB
-Database driver	MariaDB Java Client 3.5.10
-Configuration	dotenv-java 3.2.0
-Unit testing	JUnit Jupiter 5.12.2
-Test runner	Maven Surefire 3.5.2
-Code coverage	JaCoCo 0.8.14
-CI/CD	Jenkins
-Containerisation	Docker
-Container image registry	Docker Hub
-Version control	Git and GitHub
-3. Design Approach & Implementation Method
+- Implement a functional JavaFX desktop application.
+- Implement temperature conversion functionality.
+- Validate user input.
+- Save conversion results to a database.
+- Display saved conversion records.
+- Create automated tests.
+- Generate a JaCoCo code coverage report.
+- Create a Jenkins pipeline for automated build and testing.
+- Build and publish the application as a Docker image.
+
+---
+
+## 2. Technologies & Tools Used
+
+| Area | Technology |
+| --- | --- |
+| Programming language | Java 21 |
+| GUI | JavaFX 21 |
+| Build tool | Maven |
+| Database | MariaDB |
+| Database driver | MariaDB Java Client 3.5.10 |
+| Configuration | dotenv-java 3.2.0 |
+| Unit testing | JUnit Jupiter 5.12.2 |
+| Test runner | Maven Surefire 3.5.2 |
+| Code coverage | JaCoCo 0.8.14 |
+| CI/CD | Jenkins |
+| Containerisation | Docker |
+| Container image registry | Docker Hub |
+| Version control | Git and GitHub |
+
+---
+
+## 3. Design Approach & Implementation Method
 
 The application uses a simple layered/MVC-style structure.
 
-Part	Implementation
-Model	Represents temperature units and saved temperature records.
-View	JavaFX user interface containing input fields, buttons, conversion results, and the saved-record table.
-Application Logic	Handles user actions, validates input, performs conversions, and updates the user interface.
-DAO	Communicates with MariaDB to load temperature units and save/load conversion records.
-Database	MariaDB stores temperature units and conversion records.
-Application Flow
+| Part | Implementation |
+| --- | --- |
+| Model | Represents temperature units and saved temperature records. |
+| View | JavaFX user interface containing input fields, buttons, conversion results, and the saved-record table. |
+| Application logic | Handles user actions, validates input, performs conversions, and updates the user interface. |
+| DAO | Communicates with MariaDB to load temperature units and save/load conversion records. |
+| Database | MariaDB stores temperature units and conversion records. |
 
 The main application flow is:
 
-The user enters a temperature.
-The user selects the input unit.
-The application validates the input.
-The temperature is converted to Celsius, Fahrenheit, and Kelvin.
-The results are displayed.
-The conversion is saved to MariaDB.
-Saved conversions are displayed in the history table.
-Database
+1. The user enters a temperature.
+2. The user selects the input unit.
+3. The application validates the input.
+4. The temperature is converted to Celsius, Fahrenheit, and Kelvin.
+5. The results are displayed.
+6. The conversion is saved to MariaDB.
+7. Saved conversions are displayed in the history table.
 
 The database contains two main tables:
 
-temperature_unit
-temperature_record
+- `temperature_unit`
+- `temperature_record`
 
-The temperature_record table stores:
+The `temperature_record` table stores the input value, converted values, input unit, and creation time.
 
-Input temperature value
-Input unit
-Celsius value
-Fahrenheit value
-Kelvin value
-Creation time
-4. Jenkins Pipeline
+---
 
-A Jenkins Pipeline was created for the project using a Jenkinsfile.
+## 4. Jenkins Pipeline
+
+A Jenkins Pipeline was created for the project using a `Jenkinsfile`.
 
 The pipeline automates the main build, testing, reporting, and Docker steps.
 
-Pipeline Stages
-1. Checkout
+### Pipeline Stages
 
-Jenkins checks out the main branch from the GitHub repository.
+#### 1. Checkout
 
-2. Build and Test
+Jenkins checks out the `main` branch from the GitHub repository.
+
+#### 2. Build and Test
 
 Maven builds the project and runs the automated tests:
 
 mvn clean install
 
-3. Code Coverage
+
+#### 3. Code Coverage
 
 JaCoCo generates the code coverage report:
 
 mvn jacoco:report
 
-4. Publish Test Results
+
+#### 4. Publish Test Results
 
 Jenkins publishes the JUnit test results generated by Maven.
 
-5. Publish Coverage Report
+#### 5. Publish Coverage Report
 
 The Jenkins JaCoCo plugin publishes the generated code coverage information.
 
-6. Build Docker Image
+#### 6. Build Docker Image
 
-Jenkins builds a Docker image for the application using the project's Dockerfile.
+Jenkins builds a Docker image for the application using the project's `Dockerfile`.
 
 The Docker image uses Eclipse Temurin JDK 21 and JavaFX 21.
 
-7. Push Docker Image to Docker Hub
+#### 7. Push Docker Image to Docker Hub
 
 After the Docker image is successfully built, Jenkins authenticates with Docker Hub using Jenkins credentials and pushes the image to the configured Docker Hub repository.
 
-Pipeline Workflow
-GitHub
-   ↓
-Jenkins
-   ↓
-Checkout
-   ↓
-Build and Test
-   ↓
-JaCoCo Coverage
-   ↓
-Publish Test Results
-   ↓
-Publish Coverage
-   ↓
-Build Docker Image
-   ↓
-Push Docker Image to Docker Hub
+### Pipeline Workflow
+
+GitHub ↓ Jenkins ↓ Checkout ↓ Build and Test ↓ JaCoCo Coverage ↓ Publish Test Results ↓ Publish Coverage ↓ Build Docker Image ↓ Push Docker Image to Docker Hub
 
 
 The Jenkins pipeline provides an automated and repeatable process for building, testing, checking code coverage, and packaging the application.
 
-5. Testing & Quality Assurance
+---
+
+## 5. Testing & Quality Assurance
 
 The project uses automated JUnit tests to verify the application's functionality.
 
-Test Areas
-Test Area	Examples
-Temperature conversion	Celsius, Fahrenheit, and Kelvin conversions
-Temperature validation	Invalid temperatures and values below absolute zero
-Input validation	Empty input and invalid numeric values
-Model classes	Temperature unit and temperature record data
-Database operations	Saving and loading temperature records
-Application functionality	Conversion and saving of temperature records
-Test Results
+### Test Areas
 
-The automated tests can be executed using Maven:
+| Test area | Examples |
+| --- | --- |
+| Temperature conversion | Celsius, Fahrenheit, and Kelvin conversions |
+| Temperature validation | Invalid temperatures and values below absolute zero |
+| Input validation | Empty input and invalid numeric values |
+| Model classes | Temperature unit and temperature record data |
+| Database operations | Saving and loading temperature records |
+| Application functionality | Conversion and saving of temperature records |
+
+### Test Results
+
+The automated tests were executed using Maven:
 
 mvn test
 
 
 All tests passed successfully.
 
-Code Coverage
+### Code Coverage
 
 JaCoCo is used to measure test coverage.
 
@@ -179,50 +174,51 @@ target/site/jacoco/index.html
 
 The Jenkins pipeline also generates and publishes the JaCoCo coverage report.
 
-6. How to Run
-Prerequisites
+---
 
-Install the following:
+## 6. How to Run
 
-JDK 21
-Maven
-MariaDB
-Git
-Docker Desktop (required if the Docker version of the application is used)
-Run Locally
+### Prerequisites
 
-Clone the repository:
+Install:
 
-git clone https://github.com/luarakelly/temperature-converter.git
+- JDK 21
+- Maven
+- MariaDB
+- Git
+
+Docker Desktop is required if the Docker version of the application is used.
+
+### Run Locally
+
+1. Clone the repository:
+
+git clone https://github.com/luarakelly/temperature-converter.git cd temperature-converter
 
 
-Navigate to the project directory:
-
-cd temperature-converter
-
-
-Create the MariaDB database using the SQL files provided in the project.
-
-Database Configuration
+2. Create the MariaDB database using the SQL files provided in the project.
 
 The application uses the following database configuration:
 
-Setting	Value
-Database	temperature_converter_db
-User	temperature_app
-Password	temperature_app
-Host	localhost
-Port	3306
-Build the Project
+Database: temperatureconverterdb User: temperatureapp Password: temperatureapp Host: localhost Port: 3306
+
+
+3. Build the project:
+
 mvn clean install
 
-Run Automated Tests
+
+4. Run the automated tests:
+
 mvn test
 
-Start the JavaFX Application
+
+5. Start the JavaFX application:
+
 mvn javafx:run
 
-7. Generate Code Coverage
+
+### Generate Code Coverage
 
 Run:
 
@@ -234,41 +230,43 @@ The report is generated in:
 target/site/jacoco/index.html
 
 
-Open index.html in a web browser to view the detailed coverage report.
+### Run with Docker
 
-8. Run with Docker
+1. Start Docker Desktop.
 
-Start Docker Desktop before running the following commands.
+2. Build the Maven project:
 
-Build the Maven Project
 mvn clean package
 
-Build the Docker Image
+
+3. Build the Docker image:
+
 docker build -t luaram/temperature-converter:latest .
 
-Run the Docker Container
-docker run --rm \
-  -e DISPLAY=host.docker.internal:0.0 \
-  luaram/temperature-converter:latest
 
-Note: Running a JavaFX graphical application inside Docker may require additional display configuration depending on the operating system and Docker setup.
-9. Project Structure
-temperature-converter/
-├── src/
-│   ├── main/
-│   │   └── java/
-│   │       └── app/
-│   └── test/
-├── database/
-├── Dockerfile
-├── Jenkinsfile
-├── pom.xml
-└── README.md
+4. Run the Docker container:
 
-10. Author
+docker run --rm -e DISPLAY=host.docker.internal:0.0 luaram/temperature-converter:latest
 
-Luara Kelly Moreira da Silva
 
-Tieto- ja viestintätekniikka TVT25K-O
-Ohjelmistotuotantoprojekti 1
+On macOS, XQuartz may be required for the JavaFX graphical interface.
+
+On Windows, an X server such as Xming may be required.
+
+---
+
+## 7. Project Structure
+
+temperature-converter/ ├── src/ │ ├── main/ │ │ └── java/ │ │ └── app/ │ └── test/ ├── database/ ├── Dockerfile ├── Jenkinsfile ├── pom.xml └── README.md
+
+
+---
+
+## 8. Author
+
+**Luara Kelly Moreira da Silva**
+
+Tieto- ja viestintätekniikka  
+TVT25K-O  
+Ohjelmistotuotantoprojekti 1  
 TX00EY27-3012
