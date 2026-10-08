@@ -125,13 +125,6 @@ The Docker image uses Eclipse Temurin JDK 21 and JavaFX 21.
 
 After the Docker image is successfully built, Jenkins authenticates with Docker Hub using Jenkins credentials and pushes the image to the configured Docker Hub repository.
 
-### Pipeline Workflow
-
-GitHub ↓ Jenkins ↓ Checkout ↓ Build and Test ↓ JaCoCo Coverage ↓ Publish Test Results ↓ Publish Coverage ↓ Build Docker Image ↓ Push Docker Image to Docker Hub
-
-
-The Jenkins pipeline provides an automated and repeatable process for building, testing, checking code coverage, and packaging the application.
-
 ---
 
 ## 5. Testing & Quality Assurance
@@ -247,11 +240,6 @@ docker build -t luaram/temperature-converter:latest .
 4. Run the Docker container:
 
 docker run --rm -e DISPLAY=host.docker.internal:0.0 luaram/temperature-converter:latest
-
-
-On macOS, XQuartz may be required for the JavaFX graphical interface.
-
-On Windows, an X server such as Xming may be required.
 
 ---
 
