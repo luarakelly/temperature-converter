@@ -164,8 +164,10 @@ The generated report is located at:
 target/site/jacoco/index.html
 The Jenkins pipeline also generates and publishes the JaCoCo coverage report.
 
-6. How to Run
-Prerequisites
+## 6. How to Run
+
+### Prerequisites
+
 Install:
 
 JDK 21
@@ -174,46 +176,55 @@ MariaDB
 Git
 Docker Desktop is required if the Docker version of the application is used.
 
-Run Locally
+### Run Locally
+
 Clone the repository:
 git clone https://github.com/luarakelly/temperature-converter.git
+
 cd temperature-converter
+
 Create the MariaDB database using the SQL files provided in the project.
-The application uses the following database configuration:
+
+### The application uses the following database configuration:
 
 Database: temperature_converter_db
 User: temperature_app
 Password: temperature_app
 Host: localhost
 Port: 3306
-Build the project:
+
+### Build the project:
+
 mvn clean install
 Run the automated tests:
 mvn test
 Start the JavaFX application:
 mvn javafx:run
-Generate Code Coverage
-Run:
+
+### Generate Code Coverage
 
 mvn jacoco:report
-The report is generated in:
 
+The report is generated in:
 target/site/jacoco/index.html
-Run with Docker
+
+### Run with Docker
+
 Start Docker Desktop.
+
 Build the Maven project:
 mvn clean package
+
 Build the Docker image:
 docker build -t luaram/temperature-converter:latest .
+
 Run the Docker container:
 docker run --rm \
   -e DISPLAY=host.docker.internal:0.0 \
   luaram/temperature-converter:latest
-On macOS, XQuartz may be required for the JavaFX graphical interface.
 
-On Windows, an X server such as Xming may be required.
-
-7. Project Structure
+## 7. Project Structure
+´´´
 temperature-converter/
 ├── src/
 │   ├── main/
@@ -225,7 +236,10 @@ temperature-converter/
 ├── Jenkinsfile
 ├── pom.xml
 └── README.md
-8. Author
+´´´
+
+## 8. Author
+
 Luara Kelly Moreira da Silva
 
 Tieto- ja viestintätekniikka TVT25K-O Ohjelmistotuotantoprojekti 1 TX00EY27-3012
