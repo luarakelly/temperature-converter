@@ -257,8 +257,17 @@ On Windows, an X server such as Xming may be required.
 
 ## 7. Project Structure
 
-temperature-converter/ ├── src/ │ ├── main/ │ │ └── java/ │ │ └── app/ │ └── test/ ├── database/ ├── Dockerfile ├── Jenkinsfile ├── pom.xml └── README.md
-
+temperature-converter/ 
+├── src/ 
+│ ├── main/ 
+│ │ └── java/ 
+│ │ └── app/ 
+│ └── test/ 
+├── database/ 
+├── Dockerfile 
+├── Jenkinsfile 
+├── pom.xml 
+└── README.md
 
 ---
 
