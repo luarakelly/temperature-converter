@@ -14,29 +14,36 @@ public class DatabaseConnection {
             .load();
 
     private static final String HOST = getConfig("DB_HOST", "localhost");
-
     private static final String PORT = getConfig("DB_PORT", "3306");
-
     private static final String DATABASE = getConfig("DB_NAME", "temperature_converter_db");
-
     private static final String USER = getConfig("DB_USER", "temperature_app");
-
     private static final String PASSWORD = getConfig("DB_PASSWORD", "temperature_app");
-
     private static final String URL = "jdbc:mariadb://" + HOST + ":" + PORT + "/" + DATABASE;
 
     private DatabaseConnection() {
     }
 
-    private static String getConfig(String name, String defaultValue) {
+    static String resolveConfig(
+            String environmentValue,
+            String dotenvValue,
+            String defaultValue) {
 
-        String value = DOTENV.get(name);
-
-        if (value == null || value.isBlank()) {
-            return defaultValue;
+        if (environmentValue != null && !environmentValue.isBlank()) {
+            return environmentValue;
         }
 
-        return value;
+        if (dotenvValue != null && !dotenvValue.isBlank()) {
+            return dotenvValue;
+        }
+
+        return defaultValue;
+    }
+
+    private static String getConfig(String name, String defaultValue) {
+        return resolveConfig(
+                System.getenv(name),
+                DOTENV.get(name),
+                defaultValue);
     }
 
     public static Connection getConnection() throws SQLException {
