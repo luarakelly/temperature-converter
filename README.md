@@ -125,13 +125,6 @@ The Docker image uses Eclipse Temurin JDK 21 and JavaFX 21.
 
 After the Docker image is successfully built, Jenkins authenticates with Docker Hub using Jenkins credentials and pushes the image to the configured Docker Hub repository.
 
-### Pipeline Workflow
-
-GitHub ↓ Jenkins ↓ Checkout ↓ Build and Test ↓ JaCoCo Coverage ↓ Publish Test Results ↓ Publish Coverage ↓ Build Docker Image ↓ Push Docker Image to Docker Hub
-
-
-The Jenkins pipeline provides an automated and repeatable process for building, testing, checking code coverage, and packaging the application.
-
 ---
 
 ## 5. Testing & Quality Assurance
@@ -140,92 +133,121 @@ The project uses automated JUnit tests to verify the application's functionality
 
 ### Test Areas
 
-Test area	Examples
-Temperature conversion	Celsius, Fahrenheit, and Kelvin conversions
-Temperature validation	Invalid temperatures and values below absolute zero
-Input validation	Empty input and invalid numeric values
-Model classes	Temperature unit and temperature record data
-Database operations	Saving and loading temperature records
-Application functionality	Conversion and saving of temperature records
-Test Results
+| Test area | Examples |
+| --- | --- |
+| Temperature conversion | Celsius, Fahrenheit, and Kelvin conversions |
+| Temperature validation | Invalid temperatures and values below absolute zero |
+| Input validation | Empty input and invalid numeric values |
+| Model classes | Temperature unit and temperature record data |
+| Database operations | Saving and loading temperature records |
+| Application functionality | Conversion and saving of temperature records |
+
+### Test Results
+
 The automated tests were executed using Maven:
 
 mvn test
+
+
 All tests passed successfully.
 
-Code Coverage
+### Code Coverage
+
 JaCoCo is used to measure test coverage.
 
 The coverage report can be generated using:
 
 mvn jacoco:report
+
+
 The generated report is located at:
 
 target/site/jacoco/index.html
+
+
 The Jenkins pipeline also generates and publishes the JaCoCo coverage report.
 
-6. How to Run
-Prerequisites
+---
+
+## 6. How to Run
+
+### Prerequisites
+
 Install:
 
-JDK 21
-Maven
-MariaDB
-Git
+- JDK 21
+- Maven
+- MariaDB
+- Git
+
 Docker Desktop is required if the Docker version of the application is used.
 
-Run Locally
-Clone the repository:
-git clone https://github.com/luarakelly/temperature-converter.git
-cd temperature-converter
-Create the MariaDB database using the SQL files provided in the project.
+### Run Locally
+
+1. Clone the repository:
+
+git clone https://github.com/luarakelly/temperature-converter.git cd temperature-converter
+
+
+2. Create the MariaDB database using the SQL files provided in the project.
+
 The application uses the following database configuration:
 
-Database: temperature_converter_db
-User: temperature_app
-Password: temperature_app
-Host: localhost
-Port: 3306
-Build the project:
+Database: temperatureconverterdb User: temperatureapp Password: temperatureapp Host: localhost Port: 3306
+
+
+3. Build the project:
+
 mvn clean install
-Run the automated tests:
+
+
+4. Run the automated tests:
+
 mvn test
-Start the JavaFX application:
+
+
+5. Start the JavaFX application:
+
 mvn javafx:run
-Generate Code Coverage
+
+
+### Generate Code Coverage
+
 Run:
 
 mvn jacoco:report
+
+
 The report is generated in:
 
 target/site/jacoco/index.html
-Run with Docker
-Start Docker Desktop.
-Build the Maven project:
+
+
+### Run with Docker
+
+1. Start Docker Desktop.
+
+2. Build the Maven project:
+
 mvn clean package
-Build the Docker image:
+
+
+3. Build the Docker image:
+
 docker build -t luaram/temperature-converter:latest .
-Run the Docker container:
-docker run --rm \
-  -e DISPLAY=host.docker.internal:0.0 \
-  luaram/temperature-converter:latest
-On macOS, XQuartz may be required for the JavaFX graphical interface.
 
-On Windows, an X server such as Xming may be required.
 
-7. Project Structure
-temperature-converter/
-├── src/
-│   ├── main/
-│   │   └── java/
-│   │       └── app/
-│   └── test/
-├── database/
-├── Dockerfile
-├── Jenkinsfile
-├── pom.xml
-└── README.md
-8. Author
-Luara Kelly Moreira da Silva
+4. Run the Docker container:
 
-Tieto- ja viestintätekniikka TVT25K-O Ohjelmistotuotantoprojekti 1 TX00EY27-3012
+docker run --rm -e DISPLAY=host.docker.internal:0.0 luaram/temperature-converter:latest
+
+---
+
+## 7. Author
+
+**Luara Kelly Moreira da Silva**
+
+Tieto- ja viestintätekniikka  
+TVT25K-O  
+Ohjelmistotuotantoprojekti 1  
+TX00EY27-3012
