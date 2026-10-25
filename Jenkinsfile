@@ -1,9 +1,9 @@
 pipeline {
-
     agent any
 
     tools {
         maven 'Maven'
+        jdk 'JDK21'
     }
 
     environment {
@@ -23,35 +23,32 @@ pipeline {
 
         stage('Build and Test') {
             steps {
-                bat 'mvn clean install'
+                sh 'mvn clean verify'
             }
-        }
-
-        stage('Code Coverage') {
-            steps {
-                bat 'mvn jacoco:report'
-            }
-        }
-
-        stage('Publish Test Results') {
-            steps {
-                junit '**/target/surefire-reports/*.xml'
+            post {
+                always {
+                    junit(
+                        testResults: '**/target/surefire-reports/*.xml',
+                        allowEmptyResults: false
+                    )
+                }
             }
         }
 
         stage('Publish Coverage Report') {
             steps {
+                archiveArtifacts(
+                    artifacts: 'target/site/jacoco/**',
+                    fingerprint: true
+                )
+
                 jacoco()
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    docker.build(
-                        "${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}"
-                    )
-                }
+                sh 'docker build -t ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG} .'
             }
         }
 
@@ -70,4 +67,15 @@ pipeline {
             }
         }
     }
+
+    post {
+        success {
+            echo 'Build, tests, coverage, and Docker publishing succeeded.'
+        }
+
+        failure {
+            echo 'The pipeline failed. Check the stage logs.'
+        }
+    }
 }
+
