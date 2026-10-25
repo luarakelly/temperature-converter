@@ -1,27 +1,28 @@
-# Maven
+
+# Maven build output
 target/
 
-# IntelliJ IDEA
+# Environment variables and secrets
+.env
+.env.*
+
+# Allow an example configuration file
+!.env.example
+
+# IDE files
 .idea/
 *.iml
-
-# VS Code
 .vscode/
 
-# Java compiled files
-*.class
-
-# OS generated files
+# Operating system files
 .DS_Store
 Thumbs.db
 
 # Logs
 *.log
 
-# Environment variables
-.env
-.env.docker
-.env.local
+# Java crash logs
+hs_err_pid*.log
 
 # command line instructions
 .txt
