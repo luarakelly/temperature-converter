@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="app.controllers.MainController"
+      spacing="14"
+      prefWidth="850"
+      prefHeight="700"
+      style="-fx-padding: 20; -fx-background-color: white;">
+    <HBox alignment="CENTER_LEFT" spacing="12">
+        <Label fx:id="titleLabel"
+               text="%app.title"
+               style="-fx-font-size: 26px; -fx-font-weight: bold;" />
+        <Region HBox.hgrow="ALWAYS" />
+        <fx:include fx:id="languageSelector" source="language-selector.fxml" />
+    </HBox>
+
+    <fx:include fx:id="converterPanel" source="converter.fxml" />
+    <fx:include fx:id="resultsPanel" source="results.fxml" />
+    <fx:include fx:id="historyPanel" source="history.fxml" />
+
+    <Label fx:id="statusLabel" text="%status.ready" />
+</VBox>
