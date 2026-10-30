@@ -1,4 +1,6 @@
-package app;
+package app.db;
+
+import app.model.TemperatureUnit;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

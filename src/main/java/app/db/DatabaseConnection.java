@@ -1,4 +1,4 @@
-package app;
+package app.db;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
