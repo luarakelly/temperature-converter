@@ -1,5 +1,7 @@
 package app;
 
+import app.db.TemperatureUnitDAO;
+import app.model.TemperatureUnit;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

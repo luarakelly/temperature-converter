@@ -1,5 +1,7 @@
 package app;
 
+import app.model.TemperatureRecord;
+import app.model.TemperatureUnit;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

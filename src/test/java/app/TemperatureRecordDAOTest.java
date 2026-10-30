@@ -1,5 +1,9 @@
 package app;
 
+import app.db.DatabaseConnection;
+import app.db.TemperatureRecordDAO;
+import app.model.TemperatureRecord;
+import app.model.TemperatureUnit;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 
