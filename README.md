@@ -6,6 +6,8 @@ This individual in-class assignment was completed independently to practise soft
 
 The project is a JavaFX desktop application for converting temperatures between Celsius, Fahrenheit, and Kelvin. The application saves conversion results to a MariaDB database and displays previously saved conversions in a table.
 
+The interface supports English, Finnish, Swedish, Japanese, and Arabic. Its FXML views are split into language selection, converter input, results, and history components, coordinated by `main.fxml` and `MainController`.
+
 The assignment demonstrates the use of:
 
 - Java and JavaFX for application development
@@ -19,6 +21,7 @@ The assignment demonstrates the use of:
 The main requirements addressed in the assignment were:
 
 - Implement a functional JavaFX desktop application.
+- Support five languages with UTF-8 ResourceBundle property files and dynamic language switching.
 - Implement temperature conversion functionality.
 - Validate user input.
 - Save conversion results to a database.
@@ -52,13 +55,15 @@ The main requirements addressed in the assignment were:
 
 ## 3. Design Approach & Implementation Method
 
-The application uses a simple layered/MVC-style structure.
+The application uses a layered design with a coordinating FXML view and focused component views/controllers. Java packages are organized under `app.controllers`, `app.model`, and `app.db`; localization bundles live in `src/main/resources/i18n`.
 
 | Part | Implementation |
 | --- | --- |
 | Model | Represents temperature units and saved temperature records. |
-| View | JavaFX user interface containing input fields, buttons, conversion results, and the saved-record table. |
-| Application logic | Handles user actions, validates input, performs conversions, and updates the user interface. |
+| View | `main.fxml` coordinates `converter.fxml`, `results.fxml`, `history.fxml`, and `language-selector.fxml`. |
+| Coordinator | `MainController` loads ResourceBundles, switches languages, coordinates conversion, and connects the interface to the DAOs. |
+| Component controllers | Each included FXML view has a controller responsible for its own controls and presentation. |
+| Conversion logic | `TemperatureConverter` validates and converts values independently from the JavaFX controls. |
 | DAO | Communicates with MariaDB to load temperature units and save/load conversion records. |
 | Database | MariaDB stores temperature units and conversion records. |
 
@@ -81,7 +86,13 @@ The `temperature_record` table stores the input value, converted values, input u
 
 ---
 
-## 4. Jenkins Pipeline
+## 4. Localization
+
+The application uses UTF-8 `MessagesBundle_*.properties` files in `src/main/resources` for English, Finnish, Swedish, Japanese, and Arabic. `MainController` loads the selected `ResourceBundle` and passes it to each included view controller so visible labels, units, results, status text, and history headings update when the language changes.
+
+---
+
+## 5. Jenkins Pipeline
 
 A Jenkins Pipeline was created for the project using a `Jenkinsfile`.
 
@@ -127,7 +138,7 @@ After the Docker image is successfully built, Jenkins authenticates with Docker 
 
 ---
 
-## 5. Testing & Quality Assurance
+## 6. Testing & Quality Assurance
 
 The project uses automated JUnit tests to verify the application's functionality.
 
@@ -169,7 +180,7 @@ The Jenkins pipeline also generates and publishes the JaCoCo coverage report.
 
 ---
 
-## 6. How to Run
+## 7. How to Run
 
 ### Prerequisites
 
@@ -189,11 +200,11 @@ Docker Desktop is required if the Docker version of the application is used.
 git clone https://github.com/luarakelly/temperature-converter.git cd temperature-converter
 
 
-2. Create the MariaDB database using the SQL files provided in the project.
+2. Create the MariaDB database using `database/setup.sql`, `database/schema.sql`, and `database/data.sql`.
 
-The application uses the following database configuration:
+The default database configuration is:
 
-Database: temperatureconverterdb User: temperatureapp Password: temperatureapp Host: localhost Port: 3306
+Database: `temperature_converter_db`; user: `temperature_app`; password: `temperature_app`; host: `localhost`; port: `3306`. Override these values with the `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` environment variables or a local `.env` file.
 
 
 3. Build the project:
@@ -239,11 +250,36 @@ docker build -t luaram/temperature-converter:latest .
 
 4. Run the Docker container:
 
-docker run --rm -e DISPLAY=host.docker.internal:0.0 luaram/temperature-converter:latest
+docker run --rm -e DISPLAY=host.docker.internal:0.0 -e DB_HOST=host.docker.internal luaram/temperature-converter:latest
+
+Configure Xming or another X server to accept the container's display connection. The database must also be running and reachable from the container.
+
+## 8. Kubernetes / Minikube
+
+The deployment template is `kubernetes/temperature-converter.yaml`. It deploys the Docker Hub image and configures the display and database host through a ConfigMap. It expects a MariaDB server reachable from Minikube and a Kubernetes Secret containing its credentials.
+
+1. Start Minikube and ensure the MariaDB server is reachable from it. Update `DB_HOST` and `DISPLAY` in the ConfigMap in the YAML if `host.minikube.internal` is not correct for your Minikube driver.
+2. Create the database credentials Secret (use the credentials configured for your MariaDB user):
+
+   ```sh
+   kubectl create secret generic temperature-db \
+     --from-literal=username=temperature_app \
+     --from-literal=password=temperature_app
+   ```
+
+3. Apply the deployment:
+
+   ```sh
+   kubectl apply -f kubernetes/temperature-converter.yaml
+   kubectl rollout status deployment/temperature-converter
+   kubectl logs -f deployment/temperature-converter
+   ```
+
+The GUI needs an accessible X server, and the MariaDB user must allow connections from the Minikube network. The manifest does not create a database server or open a network Service because the application is a desktop GUI.
 
 ---
 
-## 7. Author
+## 9. Author
 
 **Luara Kelly Moreira da Silva**
 
