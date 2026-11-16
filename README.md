@@ -1,10 +1,12 @@
-# Temperature Converter
+# Unit Converter
 
 ## 1. Assignment Description
 
 This individual in-class assignment was completed independently to practise software development tools and technologies used in a software project.
 
-The project is a JavaFX desktop application for converting temperatures between Celsius, Fahrenheit, and Kelvin. The application saves conversion results to a MariaDB database and displays previously saved conversions in a table.
+The project is a JavaFX desktop application for converting temperatures between Celsius, Fahrenheit, and Kelvin, as well as speed, distance, and time units. The application saves every conversion to a MariaDB database and displays the last five conversions in a table.
+
+Static UI labels (titles, buttons, messages) come from `MessagesBundle_*.properties` files, while unit names and descriptions are stored in the database and read in the selected language.
 
 The interface supports English, Finnish, Swedish, Japanese, and Arabic. Its FXML views are split into language selection, converter input, results, and history components, coordinated by `main.fxml` and `MainController`.
 
@@ -22,6 +24,8 @@ The main requirements addressed in the assignment were:
 
 - Implement a functional JavaFX desktop application.
 - Support five languages with UTF-8 ResourceBundle property files and dynamic language switching.
+- Store localized unit names and descriptions in the database using the translation table approach, with English fallback.
+- Switch to right-to-left layout when Arabic is selected.
 - Implement temperature conversion functionality.
 - Validate user input.
 - Save conversion results to a database.
@@ -59,36 +63,87 @@ The application uses a layered design with a coordinating FXML view and focused 
 
 | Part | Implementation |
 | --- | --- |
-| Model | Represents temperature units and saved temperature records. |
+| Model | `MeasurementUnit` (unit with localized name and description) and `ConversionRecord` (saved conversion). |
 | View | `main.fxml` coordinates `converter.fxml`, `results.fxml`, `history.fxml`, and `language-selector.fxml`. |
 | Coordinator | `MainController` loads ResourceBundles, switches languages, coordinates conversion, and connects the interface to the DAOs. |
 | Component controllers | Each included FXML view has a controller responsible for its own controls and presentation. |
-| Conversion logic | `TemperatureConverter` validates and converts values independently from the JavaFX controls. |
-| DAO | Communicates with MariaDB to load temperature units and save/load conversion records. |
-| Database | MariaDB stores temperature units and conversion records. |
+| Conversion logic | `UnitConverter` converts between units of the same category; temperatures use `TemperatureConverter`, other units use `factor_to_base`. |
+| DAO | `MeasurementUnitDAO` returns units localized to the selected language with English fallback; `ConversionRecordDAO` saves conversions and loads the last five. |
+| Database | MariaDB stores categories, units, unit translations, and conversion records. |
 
 The main application flow is:
 
-1. The user enters a temperature.
-2. The user selects the input unit.
+1. The user enters a value.
+2. The user selects the source unit; the target list shows only units of the same category.
 3. The application validates the input.
-4. The temperature is converted to Celsius, Fahrenheit, and Kelvin.
-5. The results are displayed.
-6. The conversion is saved to MariaDB.
-7. Saved conversions are displayed in the history table.
+4. The value is converted to the target unit.
+5. The result is displayed with the localized unit names from the database.
+6. The conversion (value, from unit, to unit, result, language, timestamp) is saved to MariaDB.
+7. The last five conversions are displayed in the history table.
 
-The database contains two main tables:
+The database is created by `database/init.sql` and contains:
 
-- `temperature_unit`
-- `temperature_record`
-
-The `temperature_record` table stores the input value, converted values, input unit, and creation time.
+| Group | Tables |
+| --- | --- |
+| Measurement | `conversion_record` |
+| Unit/lookup data | `measurement_category`, `measurement_unit` |
+| Localization | `unit_translation` |
 
 ---
 
 ## 4. Localization
 
-The application uses UTF-8 `MessagesBundle_*.properties` files in `src/main/resources` for English, Finnish, Swedish, Japanese, and Arabic. `MainController` loads the selected `ResourceBundle` and passes it to each included view controller so visible labels, units, results, status text, and history headings update when the language changes.
+Localization has two layers, and the language selector changes both at once:
+
+1. **UI labels** use UTF-8 `MessagesBundle_*.properties` files in `src/main/resources/i18n` for English, Finnish, Swedish, Japanese, and Arabic. `MainController` loads the selected `ResourceBundle` and passes it to each included view controller.
+2. **Unit names and descriptions** are read from the database in the selected language (`en`, `fi`, `sv`, `ja`, `ar`). After switching language, `MainController` reloads the unit dropdowns, the last result, and the history table from the database.
+
+When Arabic is selected, the root node orientation is set to right-to-left.
+
+### Database Localization Approach: Translation Table
+
+**Chosen approach:** translation table.
+
+**Schema:**
+
+```text
+measurement_category (category_code PK)
+        1
+        |
+        n
+measurement_unit (id PK, unit_key UNIQUE, category_code FK, factor_to_base)
+        1
+        |
+        n
+unit_translation (unit_id FK, language_code, name, description,
+                  PRIMARY KEY (unit_id, language_code))
+
+conversion_record (id PK, input_value, from_unit_id FK, to_unit_id FK,
+                   result_value, language_code, created_at)
+```
+
+`measurement_unit` is language-neutral: it only holds the unit key, its category, and the conversion factor. All text that depends on the language lives in `unit_translation`, one row per unit and language. All tables and the connection use `utf8mb4`, so Japanese and Arabic are stored correctly.
+
+The DAO joins the translation table twice, once for the selected language and once for English, and uses `COALESCE` to fall back to English (and finally to the `unit_key`) when a translation is missing:
+
+```sql
+SELECT u.id, u.unit_key, u.category_code, u.factor_to_base,
+       COALESCE(t.name, d.name, u.unit_key) AS name,
+       COALESCE(t.description, d.description, '') AS description
+FROM measurement_unit u
+LEFT JOIN unit_translation t ON t.unit_id = u.id AND t.language_code = ?
+LEFT JOIN unit_translation d ON d.unit_id = u.id AND d.language_code = 'en'
+```
+
+**Why this approach:**
+
+- **No duplicated non-text data.** The conversion factor and category are stored once per unit. With the row approach they would be repeated in every language row and could drift out of sync.
+- **Adding a language needs no schema or code change.** A new language only needs new rows in `unit_translation`. The field approach would need a new column and the table approach a new table plus code to pick it at runtime.
+- **Clean foreign keys.** `conversion_record` references `measurement_unit.id`, a single language-neutral row, so a saved conversion can be shown in whatever language is currently selected.
+- **Built-in fallback.** A missing translation never breaks the GUI; the English name is shown instead. This is covered by unit tests.
+- **No NULL-heavy columns.** Unlike the field approach, a missing translation is simply a missing row.
+
+The cost is one extra JOIN per query and slightly more SQL, which is acceptable for a table of a few dozen rows. This is also the approach commonly used in production systems.
 
 ---
 
@@ -147,11 +202,15 @@ The project uses automated JUnit tests to verify the application's functionality
 | Test area | Examples |
 | --- | --- |
 | Temperature conversion | Celsius, Fahrenheit, and Kelvin conversions |
-| Temperature validation | Invalid temperatures and values below absolute zero |
+| Unit conversion | Speed, distance, and time conversions and category checks |
+| Value validation | Values below absolute zero and negative distance, time, and speed |
 | Input validation | Empty input and invalid numeric values |
-| Model classes | Temperature unit and temperature record data |
-| Database operations | Saving and loading temperature records |
-| Application functionality | Conversion and saving of temperature records |
+| DAO | Localized unit names in Japanese and Arabic, English fallback for missing translations, saving conversions, and loading the last five |
+| Application functionality | Language switching of both layers, right-to-left layout, conversion, and saving |
+
+The DAO tests run real SQL against an in-memory H2 database (MariaDB mode) created from `src/test/resources/test-db.sql`, which leaves some translations out on purpose to test the fallback.
+
+The JaCoCo `check` goal requires at least 80% line and branch coverage for the core logic (`TemperatureConverter`, `UnitConverter`, `MeasurementUnitDAO`, `ConversionRecordDAO`).
 
 ### Test Results
 
@@ -200,7 +259,11 @@ Docker Desktop is required if the Docker version of the application is used.
 git clone https://github.com/luarakelly/temperature-converter.git cd temperature-converter
 
 
-2. Create the MariaDB database using `database/setup.sql`, `database/schema.sql`, and `database/data.sql`.
+2. Create the MariaDB database, tables, translations, and application user with `database/init.sql`:
+
+```sh
+mariadb -u root -p --default-character-set=utf8mb4 < database/init.sql
+```
 
 The default database configuration is:
 
@@ -252,7 +315,7 @@ docker build -t luaram/temperature-converter:latest .
 
 docker run --rm -e DISPLAY=host.docker.internal:0.0 -e DB_HOST=host.docker.internal luaram/temperature-converter:latest
 
-Configure Xming or another X server to accept the container's display connection. The database must also be running and reachable from the container.
+Configure Xming or another X server to accept the container's display connection. The database must also be running and reachable from the container. The image includes the IPA Gothic and DejaVu fonts so Japanese and Arabic text is rendered correctly.
 
 ## 8. Kubernetes / Minikube
 
@@ -264,7 +327,7 @@ The deployment template is `kubernetes/temperature-converter.yaml`. It deploys t
    ```sh
    kubectl create secret generic temperature-db \
      --from-literal=username=temperature_app \
-     --from-literal=password=temperature_app
+     --from-literal=password='your-db-password'
    ```
 
 3. Apply the deployment:

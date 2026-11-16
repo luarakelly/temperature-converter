@@ -1,6 +1,6 @@
 package app.controllers;
 
-import app.model.TemperatureUnit;
+import app.model.MeasurementUnit;
 
 import java.util.List;
 import java.util.ResourceBundle;
@@ -9,98 +9,100 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.TextField;
-import javafx.util.StringConverter;
 
 public class ConverterController {
 
     @FXML
-    private Label temperatureLabel;
+    private Label valueLabel;
 
     @FXML
-    private TextField temperatureField;
+    private TextField valueField;
 
     @FXML
-    private Label unitLabel;
+    private Label fromLabel;
 
     @FXML
-    private ComboBox<TemperatureUnit> unitComboBox;
+    private ComboBox<MeasurementUnit> fromUnitComboBox;
 
     @FXML
-    private Button calculateButton;
+    private Label toLabel;
 
-    private ResourceBundle messages;
+    @FXML
+    private ComboBox<MeasurementUnit> toUnitComboBox;
+
+    @FXML
+    private Label unitDescriptionLabel;
+
+    @FXML
+    private Button convertButton;
+
+    private List<MeasurementUnit> allUnits = List.of();
 
     @FXML
     private void initialize() {
-        unitComboBox.setCellFactory(list -> new ListCell<>() {
-            @Override
-            protected void updateItem(TemperatureUnit unit, boolean empty) {
-                super.updateItem(unit, empty);
-                setText(empty || unit == null ? null : localizedUnit(unit.getUnitName()));
-            }
-        });
-        unitComboBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(TemperatureUnit unit) {
-                return unit == null ? "" : localizedUnit(unit.getUnitName());
-            }
-
-            @Override
-            public TemperatureUnit fromString(String value) {
-                return unitComboBox.getItems().stream()
-                        .filter(unit -> localizedUnit(unit.getUnitName()).equals(value))
-                        .findFirst()
-                        .orElse(null);
-            }
-        });
+        fromUnitComboBox.setOnAction(event -> refreshTargetUnits(selectedId(toUnitComboBox)));
+        toUnitComboBox.setOnAction(event -> refreshDescription());
     }
 
-    public void setCalculateHandler(Runnable handler) {
-        calculateButton.setOnAction(event -> handler.run());
+    public void setConvertHandler(Runnable handler) {
+        convertButton.setOnAction(event -> handler.run());
     }
 
-    public String getTemperatureInput() {
-        return temperatureField.getText();
+    public String getValueInput() {
+        return valueField.getText();
     }
 
-    public TemperatureUnit getSelectedUnit() {
-        return unitComboBox.getSelectionModel().getSelectedItem();
+    public MeasurementUnit getFromUnit() {
+        return fromUnitComboBox.getValue();
     }
 
-    public void setUnits(List<TemperatureUnit> units) {
-        unitComboBox.getItems().setAll(units);
-        if (!units.isEmpty()) {
-            unitComboBox.getSelectionModel().selectFirst();
-        }
+    public MeasurementUnit getToUnit() {
+        return toUnitComboBox.getValue();
     }
 
-    public void updateLanguage(ResourceBundle bundle) {
-        messages = bundle;
-        temperatureLabel.setText(bundle.getString("temperature.label"));
-        temperatureField.setPromptText(bundle.getString("temperature.prompt"));
-        unitLabel.setText(bundle.getString("unit.label"));
-        calculateButton.setText(bundle.getString("calculate.button"));
-        unitComboBox.setButtonCell(new ListCell<>() {
-            @Override
-            protected void updateItem(TemperatureUnit unit, boolean empty) {
-                super.updateItem(unit, empty);
-                setText(empty || unit == null ? null : localizedUnit(unit.getUnitName()));
-            }
-        });
+    public void setUnits(List<MeasurementUnit> units) {
+        int fromId = selectedId(fromUnitComboBox);
+        int toId = selectedId(toUnitComboBox);
+        allUnits = List.copyOf(units);
+
+        fromUnitComboBox.getItems().setAll(allUnits);
+        fromUnitComboBox.setValue(findById(allUnits, fromId, 0));
+        refreshTargetUnits(toId);
     }
 
-    private String localizedUnit(String unitName) {
-        if (messages == null) {
-            return unitName;
-        }
+    public void updateLanguage(ResourceBundle messages) {
+        valueLabel.setText(messages.getString("value.label"));
+        valueField.setPromptText(messages.getString("value.prompt"));
+        fromLabel.setText(messages.getString("from.label"));
+        toLabel.setText(messages.getString("to.label"));
+        convertButton.setText(messages.getString("convert.button"));
+    }
 
-        return switch (unitName.toLowerCase(java.util.Locale.ROOT)) {
-            case "celsius" -> messages.getString("unit.celsius");
-            case "fahrenheit" -> messages.getString("unit.fahrenheit");
-            case "kelvin" -> messages.getString("unit.kelvin");
-            default -> unitName;
-        };
+    private void refreshTargetUnits(int preferredToId) {
+        MeasurementUnit from = fromUnitComboBox.getValue();
+        List<MeasurementUnit> targets = allUnits.stream()
+                .filter(unit -> unit.isSameCategory(from))
+                .toList();
+        toUnitComboBox.getItems().setAll(targets);
+        toUnitComboBox.setValue(findById(targets, preferredToId, targets.size() > 1 ? 1 : 0));
+        refreshDescription();
+    }
+
+    private void refreshDescription() {
+        MeasurementUnit to = toUnitComboBox.getValue();
+        unitDescriptionLabel.setText(to == null ? "" : to.getName() + ": " + to.getDescription());
+    }
+
+    private static int selectedId(ComboBox<MeasurementUnit> comboBox) {
+        MeasurementUnit unit = comboBox.getValue();
+        return unit == null ? -1 : unit.getId();
+    }
+
+    private static MeasurementUnit findById(List<MeasurementUnit> units, int id, int fallbackIndex) {
+        return units.stream()
+                .filter(unit -> unit.getId() == id)
+                .findFirst()
+                .orElse(units.isEmpty() ? null : units.get(fallbackIndex));
     }
 }

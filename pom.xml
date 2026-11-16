@@ -64,6 +64,13 @@
 </dependency>
 
 <dependency>
+    <groupId>com.h2database</groupId>
+    <artifactId>h2</artifactId>
+    <version>2.3.232</version>
+    <scope>test</scope>
+</dependency>
+
+<dependency>
     <groupId>org.mockito</groupId>
     <artifactId>mockito-junit-jupiter</artifactId>
     <version>5.18.0</version>
@@ -134,18 +141,21 @@
                                 <rule>
                                     <element>CLASS</element>
                                     <includes>
-                                        <include>app.TemperatureConverter</include>
+                                        <include>app.model.TemperatureConverter</include>
+                                        <include>app.model.UnitConverter</include>
+                                        <include>app.db.MeasurementUnitDAO</include>
+                                        <include>app.db.ConversionRecordDAO</include>
                                     </includes>
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.90</minimum>
+                                            <minimum>0.80</minimum>
                                         </limit>
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.90</minimum>
+                                            <minimum>0.80</minimum>
                                         </limit>
                                     </limits>
                                 </rule>

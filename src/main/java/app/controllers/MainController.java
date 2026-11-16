@@ -1,10 +1,10 @@
 package app.controllers;
 
-import app.db.TemperatureRecordDAO;
-import app.db.TemperatureUnitDAO;
-import app.model.TemperatureConverter;
-import app.model.TemperatureRecord;
-import app.model.TemperatureUnit;
+import app.db.ConversionRecordDAO;
+import app.db.MeasurementUnitDAO;
+import app.model.ConversionRecord;
+import app.model.MeasurementUnit;
+import app.model.UnitConverter;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,18 +16,25 @@ import java.util.logging.Logger;
 
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.fxml.FXML;
+import javafx.geometry.NodeOrientation;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 
 public class MainController {
+
+    public static final int HISTORY_LIMIT = 5;
 
     private static final Logger LOGGER =
             Logger.getLogger(MainController.class.getName());
 
-    private final TemperatureConverter converter;
-    private final TemperatureUnitDAO unitDAO;
-    private final TemperatureRecordDAO recordDAO;
+    private final UnitConverter converter;
+    private final MeasurementUnitDAO unitDAO;
+    private final ConversionRecordDAO recordDAO;
     private final Map<String, Locale> availableLanguages = new LinkedHashMap<>();
+
+    @FXML
+    private VBox rootPane;
 
     @FXML
     private Label titleLabel;
@@ -48,17 +55,19 @@ public class MainController {
     private HistoryController historyPanelController;
 
     private ResourceBundle messages;
-    private TemperatureRecord lastResult;
+    private String languageCode = MeasurementUnitDAO.DEFAULT_LANGUAGE;
+    private List<MeasurementUnit> units = List.of();
+    private ConversionRecord lastResult;
     private String statusMessageKey = "status.ready";
 
     public MainController() {
-        this(new TemperatureConverter(), new TemperatureUnitDAO(), new TemperatureRecordDAO());
+        this(new UnitConverter(), new MeasurementUnitDAO(), new ConversionRecordDAO());
     }
 
     public MainController(
-            TemperatureConverter converter,
-            TemperatureUnitDAO unitDAO,
-            TemperatureRecordDAO recordDAO) {
+            UnitConverter converter,
+            MeasurementUnitDAO unitDAO,
+            ConversionRecordDAO recordDAO) {
         this.converter = converter;
         this.unitDAO = unitDAO;
         this.recordDAO = recordDAO;
@@ -74,11 +83,9 @@ public class MainController {
         languageSelectorController.configureLanguages(
                 List.copyOf(availableLanguages.keySet()), "English");
         languageSelectorController.setLanguageSelectionHandler(this::changeLanguage);
-        converterPanelController.setCalculateHandler(this::calculateAndSave);
+        converterPanelController.setConvertHandler(this::convertAndSave);
 
         changeLanguage("English");
-        loadUnits();
-        loadRecords();
     }
 
     public void changeLanguage(String language) {
@@ -88,12 +95,25 @@ public class MainController {
         }
 
         messages = ResourceBundle.getBundle("i18n.MessagesBundle", locale);
+        languageCode = locale.getLanguage();
+        rootPane.setNodeOrientation("ar".equals(languageCode)
+                ? NodeOrientation.RIGHT_TO_LEFT
+                : NodeOrientation.LEFT_TO_RIGHT);
+
         titleLabel.setText(messages.getString("app.title"));
         languageSelectorController.updateLanguage(messages);
         converterPanelController.updateLanguage(messages);
-        resultsPanelController.updateLanguage(messages, lastResult);
         historyPanelController.updateLanguage(messages);
         statusLabel.setText(messages.getString(statusMessageKey));
+
+        loadUnits();
+        lastResult = relocalize(lastResult);
+        resultsPanelController.updateLanguage(messages, lastResult);
+        loadRecords();
+    }
+
+    public String getLanguageCode() {
+        return languageCode;
     }
 
     public ReadOnlyStringProperty titleProperty() {
@@ -102,7 +122,8 @@ public class MainController {
 
     private void loadUnits() {
         try {
-            converterPanelController.setUnits(unitDAO.findAll());
+            units = unitDAO.findAll(languageCode);
+            converterPanelController.setUnits(units);
         } catch (Exception exception) {
             showError("error.database.title", "error.load.units", exception);
         }
@@ -110,55 +131,62 @@ public class MainController {
 
     private void loadRecords() {
         try {
-            historyPanelController.setRecords(recordDAO.findAll());
+            historyPanelController.setRecords(recordDAO.findLatest(languageCode, HISTORY_LIMIT));
         } catch (Exception exception) {
             showError("error.database.title", "error.load.records", exception);
         }
     }
 
-    @FXML
-    private void calculateAndSave() {
-        String input = converterPanelController.getTemperatureInput().trim();
-        if (input.isEmpty()) {
+    private ConversionRecord relocalize(ConversionRecord record) {
+        if (record == null) {
+            return null;
+        }
+        return record.withUnits(
+                findUnit(record.getFromUnit()),
+                findUnit(record.getToUnit()));
+    }
+
+    private MeasurementUnit findUnit(MeasurementUnit unit) {
+        return units.stream()
+                .filter(candidate -> candidate.getId() == unit.getId())
+                .findFirst()
+                .orElse(unit);
+    }
+
+    private void convertAndSave() {
+        String input = converterPanelController.getValueInput();
+        if (input == null || input.isBlank()) {
             showWarning("warning.input.title", "warning.input");
             return;
         }
 
-        TemperatureUnit selectedUnit = converterPanelController.getSelectedUnit();
-        if (selectedUnit == null) {
+        MeasurementUnit from = converterPanelController.getFromUnit();
+        MeasurementUnit to = converterPanelController.getToUnit();
+        if (from == null || to == null) {
             showWarning("warning.unit.title", "warning.unit");
             return;
         }
 
         final double value;
         try {
-            value = Double.parseDouble(input);
+            value = Double.parseDouble(input.trim().replace(',', '.'));
         } catch (NumberFormatException exception) {
             showWarning("warning.invalid.title", "warning.number");
             return;
         }
 
-        String unit = selectedUnit.getUnitName();
-        if (!Double.isFinite(value)) {
-            showWarning("warning.invalid.title", "warning.number");
-            return;
-        }
-        if (!converter.isValidTemperature(value, unit)) {
+        if (!converter.isValidValue(value, from)) {
             showWarning("warning.invalid.title", "warning.invalid");
             return;
         }
 
-        TemperatureRecord result = new TemperatureRecord(
-                value,
-                converter.toCelsius(value, unit),
-                converter.toFahrenheit(value, unit),
-                converter.toKelvin(value, unit),
-                selectedUnit);
+        ConversionRecord result = new ConversionRecord(
+                value, from, to, converter.convert(value, from, to), languageCode);
 
         try {
             recordDAO.insert(result);
             lastResult = result;
-            resultsPanelController.showResults(messages, lastResult);
+            resultsPanelController.showResult(messages, lastResult);
             loadRecords();
             statusMessageKey = "status.saved";
             statusLabel.setText(messages.getString(statusMessageKey));

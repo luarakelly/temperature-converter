@@ -11,7 +11,10 @@
     <Label fx:id="resultsTitle"
            text="%results.title"
            style="-fx-font-size: 18px; -fx-font-weight: bold;" />
-    <Label fx:id="celsiusResult" text="%result.celsius.empty" />
-    <Label fx:id="fahrenheitResult" text="%result.fahrenheit.empty" />
-    <Label fx:id="kelvinResult" text="%result.kelvin.empty" />
+    <Label fx:id="resultLabel"
+           text="%result.empty"
+           style="-fx-font-size: 16px;" />
+    <Label fx:id="resultDescriptionLabel"
+           wrapText="true"
+           style="-fx-text-fill: #555555;" />
 </VBox>

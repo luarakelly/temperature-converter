@@ -12,6 +12,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgtk-3-0 \
     libgl1 \
     libglx0 \
+    fontconfig \
+    fonts-dejavu-core \
+    fonts-ipafont-gothic \
     wget \
     unzip \
     && rm -rf /var/lib/apt/lists/*

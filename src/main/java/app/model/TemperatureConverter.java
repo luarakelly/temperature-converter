@@ -42,8 +42,6 @@ public class TemperatureConverter {
         return true;
     }
 
-    // Conversions.
-
     public double toCelsius(double value, String unit) {
         if (unit == null) {
             throw new IllegalArgumentException("Temperature unit cannot be null");

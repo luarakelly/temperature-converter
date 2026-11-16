@@ -1,8 +1,8 @@
 package app.controllers;
 
-import app.model.TemperatureRecord;
+import app.model.ConversionRecord;
 
-import java.util.Locale;
+import java.text.MessageFormat;
 import java.util.ResourceBundle;
 
 import javafx.fxml.FXML;
@@ -14,38 +14,30 @@ public class ResultsController {
     private Label resultsTitle;
 
     @FXML
-    private Label celsiusResult;
+    private Label resultLabel;
 
     @FXML
-    private Label fahrenheitResult;
+    private Label resultDescriptionLabel;
 
-    @FXML
-    private Label kelvinResult;
-
-    public void updateLanguage(ResourceBundle messages, TemperatureRecord record) {
+    public void updateLanguage(ResourceBundle messages, ConversionRecord record) {
         resultsTitle.setText(messages.getString("results.title"));
-        showResults(messages, record);
+        showResult(messages, record);
     }
 
-    public void showResults(ResourceBundle messages, TemperatureRecord record) {
+    public void showResult(ResourceBundle messages, ConversionRecord record) {
         if (record == null) {
-            celsiusResult.setText(messages.getString("result.celsius.empty"));
-            fahrenheitResult.setText(messages.getString("result.fahrenheit.empty"));
-            kelvinResult.setText(messages.getString("result.kelvin.empty"));
+            resultLabel.setText(messages.getString("result.empty"));
+            resultDescriptionLabel.setText("");
             return;
         }
 
-        celsiusResult.setText(format(
-                messages, "result.celsius", record.getCelsius()));
-        fahrenheitResult.setText(format(
-                messages, "result.fahrenheit", record.getFahrenheit()));
-        kelvinResult.setText(format(
-                messages, "result.kelvin", record.getKelvin()));
-    }
-
-    private String format(ResourceBundle messages, String key, double value) {
-        return java.text.MessageFormat.format(
-                messages.getString(key),
-                String.format(Locale.ROOT, "%.2f", value));
+        resultLabel.setText(MessageFormat.format(
+                messages.getString("result.format"),
+                DisplayFormat.number(record.getInputValue()),
+                record.getFromUnit().getName(),
+                DisplayFormat.number(record.getResultValue()),
+                record.getToUnit().getName()));
+        resultDescriptionLabel.setText(
+                record.getToUnit().getName() + ": " + record.getToUnit().getDescription());
     }
 }
